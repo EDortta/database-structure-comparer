@@ -5,6 +5,7 @@ import sqlparse
 import json
 from collections import defaultdict
 from datetime import datetime
+import shutil
 
 """
 connection.json -> get-current-schema.py -> schemas.json 
@@ -287,6 +288,9 @@ def main(host, database, default_connection_file):
     DUMP_DIR = os.path.join("dump", host, database)
     conn_file = os.path.join(DUMP_DIR, "connection.json")
 
+    if not os.path.exists(DUMP_DIR):
+        os.makedirs(DUMP_DIR)
+
     if not os.path.exists(conn_file):
         if os.path.exists(default_connection_file):
             shutil.copy(default_connection_file, conn_file)
@@ -339,5 +343,5 @@ if __name__ == "__main__":
     if not args.database:
         args.database = input("Enter the database name: ")
     print(f"Using database: {args.database}")
-    main(args.host, args.database, args.default_connection_file | None)
+    main(args.host, args.database, args.default_connection_file)
 
