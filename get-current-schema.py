@@ -281,11 +281,19 @@ def write_jsons(structure, indexes):
         json.dump(indexes, f, indent=2)
 
 
-def main(host, database):
+def main(host, database, default_connection_file):
     global DB, OUTDIR, STRUCTURE_FILE, INDEXES_FILE
 
     DUMP_DIR = os.path.join("dump", host, database)
     conn_file = os.path.join(DUMP_DIR, "connection.json")
+
+    if not os.path.exists(conn_file):
+        if os.path.exists(default_connection_file):
+            shutil.copy(default_connection_file, conn_file)
+        else:
+            print(f"No connection file found at {conn_file}")
+            return
+
     if os.path.exists(conn_file):
         with open(conn_file) as f:
             DB = json.load(f)
@@ -325,10 +333,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Get current database structure.")
     parser.add_argument("--host", help="The host where the database is located (used for config)")
     parser.add_argument("--database", help="The database name (used for config and folder)")
+    parser.add_argument("--default-connection-file", help="The default connection file to use (used for config)")
 
     args = parser.parse_args()
     if not args.database:
         args.database = input("Enter the database name: ")
     print(f"Using database: {args.database}")
-    main(args.host, args.database)
+    main(args.host, args.database, args.default_connection_file | None)
 
