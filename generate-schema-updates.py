@@ -5,6 +5,20 @@ from datetime import datetime
 from glob import glob
 from pathlib import Path
 
+"""
+[ in source system connection.json -> get-current-schema.py -> schemas.json ]
+schemas.json -> generate-schema-updates.py -> update-schema.sql
+
+This script generates SQL schema updates by comparing target JSON schema definitions against the actual database structure.
+It uses MySQL connector to fetch current table structures and compares them with JSON schema files (likely produced by get-current-schema.py).
+The script identifies required additions, modifications, and drops of columns by comparing target schemas with actual database state.
+
+THIS SCRIPT DOES NOT MODIFY THE DATABASE. You need to run the update-schema.sql manually.
+
+(C) 2025 - Esteban D.Dortta - MIT License
+"""
+
+
 def get_latest_timestamp(base_path):
     print(f"Getting latest timestamp from {base_path}")
 

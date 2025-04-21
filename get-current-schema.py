@@ -6,6 +6,23 @@ import json
 from collections import defaultdict
 from datetime import datetime
 
+"""
+connection.json -> get-current-schema.py -> schemas.json 
+[ in the target system, schemas.json -> generate-schema-updates.py -> update-schema.sql ]
+
+This script extracts and maps the current database schema from SQL to a standardized format.
+It parses SQL table definitions and converts SQL types to standardized types using TYPE_MAP.
+TYPE_MAP is compatible with YeAPF2's database types.
+The script handles SQL parsing including quoted strings and nested parentheses for complex definitions.
+The script also handles primary keys and indexes but separately from the table definition.
+In such way, we can later update the target schema to match the current one.
+
+THIS SCRIT DOES NOT MODIFY THE DATABASE. It just generates the JSON files that will be 
+used by generate-schema-updates.py to generate the update-schema.sql in the target system.
+
+(C) 2025 - Esteban D.Dortta - MIT License
+"""
+
 OUTDIR = None
 STRUCTURE_FILE = None
 INDEXES_FILE = None
