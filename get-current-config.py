@@ -299,6 +299,7 @@ def main(host, database):
         print(f"Done! All files in {OUTDIR}/")
     else:
         print(f"No connection file found for {host}:{database}")
+        print(f"You need to have a file called 'connection.json' at {DUMP_DIR}")
 
 
 if __name__ == "__main__":
