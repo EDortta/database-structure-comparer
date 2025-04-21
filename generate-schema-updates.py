@@ -1,6 +1,7 @@
 import os
 import json
 import mysql.connector
+import shutil
 from datetime import datetime
 from glob import glob
 from pathlib import Path
@@ -25,12 +26,24 @@ def get_latest_timestamp(base_path):
     timestamps = sorted(Path(base_path).glob("[0-9][0-9][0-9][0-9]-*-*-*"), reverse=True)
     return timestamps[0].name if timestamps else None
 
-def load_connection_config(folder, host, database):
+def load_connection_config(folder, host, database, default_connection_file=None):
     path = Path(f"{folder}/{host}/{database}/connection.json")
     if not path.exists():
-        raise FileNotFoundError(f"Connection file not found: {path}")
+        if os.path.exists(default_connection_file):
+            if not os.path.exists(path):
+                os.makedirs(path.parent)
+            shutil.copy(default_connection_file, path)
+        else:
+            raise FileNotFoundError(f"Connection file not found: {path}")
     with open(path) as f:
-        return json.load(f)
+        config = json.load(f)
+        return {
+            "host": config.get("host"),
+            "database": config.get("database"),
+            "user": config.get("user"),
+            "password": config.get("password"),
+            "port": config.get("port")
+        }
 
 def load_json_tables(base_path):
     return {
@@ -93,8 +106,8 @@ def compare_and_generate_sql(target_json, actual_fields):
 
     return adds, modifies, drops
 
-def main(src_host, src_database, target_host, target_database, timestamp=None):
-    conn_cfg = load_connection_config('updates', target_host, target_database)
+def main(src_host, src_database, target_host, target_database, timestamp=None, default_connection_file=None):
+    conn_cfg = load_connection_config('updates', target_host, target_database, default_connection_file)
     base_path = f"dump/{src_host}/{src_database}"
     timestamp = timestamp or get_latest_timestamp(base_path)
     if not timestamp:
@@ -102,10 +115,10 @@ def main(src_host, src_database, target_host, target_database, timestamp=None):
     dump_path = f"{base_path}/{timestamp}"
 
 
-    output_path = f"updates/{conn_cfg['host']}/{conn_cfg['database']}/{timestamp}"
+    output_path = f"updates/{target_host}/{conn_cfg['database']}/{timestamp}"
     os.makedirs(output_path, exist_ok=True)
 
-    print(f"📡 Connecting to database `{conn_cfg['database']}` at {conn_cfg['host']}:{conn_cfg.get('port',3306)}")
+    print(f"Connecting to database `{conn_cfg['database']}` at {conn_cfg['host']}:{conn_cfg.get('port',3306)}")
     conn = mysql.connector.connect(**conn_cfg)
     cursor = conn.cursor()
 
@@ -150,9 +163,10 @@ if __name__ == "__main__":
     parser.add_argument("source", help="The source host and database in the format host:database (used for config)")
     parser.add_argument("target", help="The target host and database in the format host:database (used for config)")
     parser.add_argument("--timestamp", help="Optional timestamp folder, otherwise most recent is used")
+    parser.add_argument("--default-connection-file", help="The default connection file to use (used for config)")
 
     args = parser.parse_args()
     src_host, src_database = args.source.split(":")
     target_host, target_database = args.target.split(":")
-    main(src_host, src_database, target_host, target_database, args.timestamp)
+    main(src_host, src_database, target_host, target_database, args.timestamp, args.default_connection_file)
 

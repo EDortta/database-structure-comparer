@@ -282,7 +282,7 @@ def write_jsons(structure, indexes):
         json.dump(indexes, f, indent=2)
 
 
-def main(host, database, default_connection_file):
+def main(host, database, default_connection_file=None):
     global DB, OUTDIR, STRUCTURE_FILE, INDEXES_FILE
 
     DUMP_DIR = os.path.join("dump", host, database)
